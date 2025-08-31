@@ -5,29 +5,29 @@ import nodemailer from "nodemailer";
 
 export async function POST(req) {
   try {
-    // Read JSON body safely
+    // 1️⃣ Read JSON body safely
     const body = await req.json();
     const email = body?.email?.trim();
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // Get MongoDB collections
+    // 2️⃣ Get MongoDB collections
     const { usersCollection } = await getCollections();
 
-    // Check if user exists
+    // 3️⃣ Check if user exists
     const user = await usersCollection.findOne({ email });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Generate OTP
+    // 4️⃣ Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Save OTP in DB
+    // 5️⃣ Save OTP in DB
     await usersCollection.updateOne({ email }, { $set: { reset_otp: otp } });
 
-    // Safe environment variables with defaults
+    // 6️⃣ Safe environment variables
     const host = process.env.EMAIL_HOST || "";
     const port = parseInt(process.env.EMAIL_PORT || "587", 10);
     const userEnv = process.env.EMAIL_USER || "";
@@ -41,7 +41,7 @@ export async function POST(req) {
       );
     }
 
-    // Setup nodemailer transport
+    // 7️⃣ Setup nodemailer transport
     const transporter = nodemailer.createTransport({
       host,
       port,
@@ -52,7 +52,7 @@ export async function POST(req) {
       },
     });
 
-    // Send OTP email
+    // 8️⃣ Send OTP email
     await transporter.sendMail({
       from: userEnv,
       to: email,
