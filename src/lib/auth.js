@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose";
 
-const SECRET_KEY = process.env.JWT_SECRET;       // keep in .env
-const ALGORITHM = process.env.ALGORITHM || "HS256"; 
+const SECRET_KEY = process.env.JWT_SECRET;
+const ALGORITHM = process.env.ALGORITHM || "HS256";
 const ACCESS_TOKEN_EXPIRE_MINUTES = parseInt(process.env.ACCESS_TOKEN_EXPIRE_MINUTES) || 60;
 
 // ✅ Hash password
@@ -21,7 +22,7 @@ export function createAccessToken(data, expiresIn = `${ACCESS_TOKEN_EXPIRE_MINUT
   return jwt.sign(data, SECRET_KEY, { algorithm: ALGORITHM, expiresIn });
 }
 
-// ✅ Decode + Verify JWT
+// ✅ Decode + Verify JWT (for Authorization headers, optional)
 export function decodeAccessToken(token) {
   try {
     return jwt.verify(token, SECRET_KEY, { algorithms: [ALGORITHM] });
@@ -30,12 +31,16 @@ export function decodeAccessToken(token) {
   }
 }
 
-import { jwtVerify } from "jose";
-
+// ✅ Get current user from HTTP-only cookie
 export async function getCurrentUser(req) {
-  const token = req.cookies.get("token")?.value; // read from cookie
+  // Read token from cookies
+  const token = req.cookies?.get("token")?.value;
   if (!token) throw new Error("Unauthorized");
 
-  const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
-  return payload.sub; // assuming you stored username in sub
+  try {
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
+    return payload.sub; // Assuming username is stored in `sub`
+  } catch (err) {
+    throw new Error("Unauthorized");
+  }
 }
