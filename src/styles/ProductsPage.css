@@ -1,0 +1,180 @@
+.products-page {
+  padding: 20px;
+  text-align: center;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.product-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  /* justify-content: space-between; */ /* REMOVE THIS */
+  height: auto; /* auto height so card fits content */
+}
+
+.desc {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 5px 0 5px; /* reduce bottom margin */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px; /* reduce gap between desc and actions */
+}
+
+.product-card:hover {
+  transform: scale(1.02);
+}
+
+.image-slider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px; /* smaller images */
+  overflow: hidden;
+}
+
+.image-slider img {
+  max-height: 100%;
+  width: auto;
+  border-radius: 8px;
+  cursor: pointer;
+  object-fit: contain;
+}
+
+.arrow-btn {
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 50%;
+  position: absolute;
+}
+.arrow-btn:first-of-type { left: 5px; }
+.arrow-btn:last-of-type { right: 5px; }
+
+.product-name {
+  margin: 10px 0 5px;
+  cursor: pointer;
+  color: #0077cc;
+}
+
+.price {
+  font-weight: bold;
+  color: #333;
+}
+
+
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity-selector button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.quantity-selector button:hover {
+  background-color: #0056b3;
+}
+
+.quantity-selector span {
+  min-width: 30px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.add-btn {
+  background: #0077cc;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.add-btn:hover {
+  background: #0056b3;
+}
+
+/* Cart popup */
+.cart-popup {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #888;
+  padding: 20px 25px;
+  border-radius: 8px;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.popup-buttons button {
+  padding: 6px 18px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.popup-buttons button:first-child {
+  background-color: #6c757d; /* OK button */
+  color: white;
+}
+
+.popup-buttons button:first-child:hover {
+  background-color: #5a6268;
+}
+
+.popup-buttons button:last-child {
+  background-color: #007bff; /* Go to Cart button */
+  color: white;
+}
+
+.popup-buttons button:last-child:hover {
+  background-color: #0056b3;
+}
