@@ -1,65 +1,81 @@
-// src/app/api/auth/forgot-password/route.js
-import { NextResponse } from "next/server";
-import { getCollections } from "@/lib/db";
-import nodemailer from "nodemailer";
+"use client";
 
-export async function POST(req) {
-  try {
-    // Read JSON body safely
-    const body = await req.json();
-    const email = body?.email?.trim();
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+import { useState } from "react";
+import axios from "axios";
+import "@/styles/Auth.css";
+
+export default function ForgotPassword() {
+  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  // Step 1: Request OTP
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post("/api/auth/forgot-password", { email });
+      setMessage(res.data.msg || "OTP sent to your email.");
+      setStep(2);
+    } catch (err) {
+      setMessage(err.response?.data?.error || "Error sending OTP");
     }
+  };
 
-    // Get MongoDB collections
-    const { usersCollection } = await getCollections();
-
-    // Check if user exists
-    const user = await usersCollection.findOne({ email });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+  // Step 2: Verify OTP & reset password
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post("/api/auth/reset-password", {
+        email,
+        otp,
+        new_password: newPassword,
+      });
+      setMessage(res.data.msg || "Password reset successful!");
+    } catch (err) {
+      setMessage(err.response?.data?.error || "Error resetting password");
     }
+  };
 
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2 className="auth-title">Forgot Password</h2>
 
-    // Save OTP in DB
-    await usersCollection.updateOne({ email }, { $set: { reset_otp: otp } });
+        {step === 1 ? (
+          <form onSubmit={handleSendOtp} className="auth-form">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <button type="submit" className="auth-btn">Send OTP</button>
+          </form>
+        ) : (
+          <form onSubmit={handleResetPassword} className="auth-form">
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+            <button type="submit" className="auth-btn">Reset Password</button>
+          </form>
+        )}
 
-    // Safe environment variables
-    const host = process.env.EMAIL_HOST || "";
-    const port = parseInt(process.env.EMAIL_PORT || "587", 10);
-    const userEnv = process.env.EMAIL_USER || "";
-    const passEnv = process.env.EMAIL_PASS || "";
-
-    if (!host || !userEnv || !passEnv) {
-      console.error("Email environment variables are missing!");
-      return NextResponse.json(
-        { error: "Email server not configured" },
-        { status: 500 }
-      );
-    }
-
-    // Setup nodemailer transport
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465, // SSL if port 465
-      auth: { user: userEnv, pass: passEnv },
-    });
-
-    // Send OTP email
-    await transporter.sendMail({
-      from: userEnv,
-      to: email,
-      subject: "Password Reset OTP",
-      text: `Your OTP for password reset is: ${otp}. It will expire soon.`,
-    });
-
-    return NextResponse.json({ msg: "OTP sent successfully" });
-  } catch (err) {
-    console.error("Forgot password error:", err);
-    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });
-  }
+        <p className="auth-message">{message}</p>
+      </div>
+    </div>
+  );
 }
