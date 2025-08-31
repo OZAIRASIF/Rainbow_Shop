@@ -5,9 +5,9 @@ import nodemailer from "nodemailer";
 
 export async function POST(req) {
   try {
-    // Read JSON body
+    // Read JSON body safely
     const body = await req.json();
-    const email = body.email;
+    const email = body?.email?.trim();
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
@@ -27,20 +27,34 @@ export async function POST(req) {
     // Save OTP in DB
     await usersCollection.updateOne({ email }, { $set: { reset_otp: otp } });
 
+    // Safe environment variables with defaults
+    const host = process.env.EMAIL_HOST || "";
+    const port = parseInt(process.env.EMAIL_PORT || "587", 10);
+    const userEnv = process.env.EMAIL_USER || "";
+    const passEnv = process.env.EMAIL_PASS || "";
+
+    if (!host || !userEnv || !passEnv) {
+      console.error("Email environment variables are missing!");
+      return NextResponse.json(
+        { error: "Email server not configured" },
+        { status: 500 }
+      );
+    }
+
     // Setup nodemailer transport
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT),
-      secure: false,
+      host,
+      port,
+      secure: port === 465, // SSL if port 465
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: userEnv,
+        pass: passEnv,
       },
     });
 
     // Send OTP email
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: userEnv,
       to: email,
       subject: "Password Reset OTP",
       text: `Your OTP for password reset is: ${otp}. It will expire soon.`,
