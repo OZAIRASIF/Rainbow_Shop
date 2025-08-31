@@ -5,16 +5,17 @@ const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"]
 const PROTECTED_ROUTES = ["/products", "/cart", "/checkout"];
 
 export async function middleware(req) {
+  // Use optional chaining to safely get pathname
   const pathname = req.nextUrl?.pathname;
 
-  // Safety check
+  // Skip API routes and undefined paths
   if (!pathname || pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
   const token = req.cookies.get("token")?.value;
 
-  // Protect client routes
+  // Protect client-side routes
   if (PROTECTED_ROUTES.some((p) => pathname.startsWith(p))) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
     try {
@@ -38,7 +39,7 @@ export async function middleware(req) {
     return NextResponse.next();
   }
 
-  // Homepage redirect to login
+  // Homepage redirect
   if (pathname === "/") return NextResponse.redirect(new URL("/login", req.url));
 
   return NextResponse.next();
@@ -46,13 +47,13 @@ export async function middleware(req) {
 
 export const config = {
   matcher: [
-    "/", 
-    "/products/:path*", 
-    "/cart/:path*", 
-    "/checkout/:path*", 
-    "/login", 
-    "/signup", 
-    "/forgot-password", 
+    "/",
+    "/products/:path*",
+    "/cart/:path*",
+    "/checkout/:path*",
+    "/login",
+    "/signup",
+    "/forgot-password",
     "/reset-password",
   ],
 };
