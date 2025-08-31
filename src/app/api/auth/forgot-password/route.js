@@ -1,31 +1,33 @@
+// src/app/api/auth/forgot-password/route.js
 import { NextResponse } from "next/server";
 import { getCollections } from "@/lib/db";
 import nodemailer from "nodemailer";
 
 export async function POST(req) {
   try {
-    const { email } = await req.json();
+    // Read JSON body
+    const body = await req.json();
+    const email = body.email;
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    // Get MongoDB collections
     const { usersCollection } = await getCollections();
 
     // Check if user exists
     const user = await usersCollection.findOne({ email });
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Save OTP in DB
-    await usersCollection.updateOne(
-      { email },
-      { $set: { reset_otp: otp } }
-    );
+    await usersCollection.updateOne({ email }, { $set: { reset_otp: otp } });
 
-    // Setup email transport
+    // Setup nodemailer transport
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: parseInt(process.env.EMAIL_PORT),
@@ -44,12 +46,9 @@ export async function POST(req) {
       text: `Your OTP for password reset is: ${otp}. It will expire soon.`,
     });
 
-    return NextResponse.json({ msg: "OTP sent successfully to your email" });
+    return NextResponse.json({ msg: "OTP sent successfully" });
   } catch (err) {
     console.error("Forgot password error:", err);
-    return NextResponse.json(
-      { error: "Failed to send OTP" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });
   }
 }
